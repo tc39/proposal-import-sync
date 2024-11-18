@@ -2,8 +2,8 @@
 
 ## Status
 
-Champion: Guy Bedford
-Stage: -1
+* Champion: Guy Bedford
+* Stage: 0
 
 ## Problem Statement
 
