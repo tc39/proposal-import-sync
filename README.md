@@ -127,7 +127,7 @@ No, unlike `defer` and `source`, `import.sync` is not a phase, it is a new meta 
 
 No syntax is supported for `import sync mod from 'mod'`.
 
-To guarantee that a graph is sync upfront, instead see see the [Module Sync Assert](https://github.com/tc39/proposal-module-sync-assert) proposal, which may provide an import attribute or otherwise.
+To guarantee that a graph is sync upfront, instead see the [Module Sync Assert](https://github.com/tc39/proposal-module-sync-assert) proposal, which may provide an import attribute or otherwise.
 
 _Post an [issue](https://github.com/guybedford/proposal-import-sync/issues)._
 
