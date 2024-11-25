@@ -132,4 +132,3 @@ To guarantee that a graph is sync upfront, instead see the [Module Sync Assert](
 _Post an [issue](https://github.com/guybedford/proposal-import-sync/issues)._
 
 [Defer Import Eval]: https://github.com/tc39/proposal-defer-import-eval
-[ESM Phase Imports]: https://github.com/tc39/proposal-esm-phase-imports
