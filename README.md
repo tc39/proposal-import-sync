@@ -71,8 +71,9 @@ Just like with dynamic import, with a synchronous import, it's possible to check
 For example, checking if host builtins are available:
 
 ```js
+let fs;
 try {
-  let fs = import.sync('node:fs');
+  fs = import.sync('node:fs');
 } catch {}
 
 if (fs) {
