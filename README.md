@@ -71,8 +71,9 @@ Just like with dynamic import, with a synchronous import, it's possible to check
 For example, checking if host builtins are available:
 
 ```js
+let fs;
 try {
-  let fs = import.sync('node:fs');
+  fs = import.sync('node:fs');
 } catch {}
 
 if (fs) {
@@ -127,9 +128,8 @@ No, unlike `defer` and `source`, `import.sync` is not a phase, it is a new meta 
 
 No syntax is supported for `import sync mod from 'mod'`.
 
-To guarantee that a graph is sync upfront, instead see see the [Module Sync Assert](https://github.com/tc39/proposal-module-sync-assert) proposal, which may provide an import attribute or otherwise.
+To guarantee that a graph is sync upfront, instead see the [Module Sync Assert](https://github.com/tc39/proposal-module-sync-assert) proposal, which may provide an import attribute or otherwise.
 
 _Post an [issue](https://github.com/guybedford/proposal-import-sync/issues)._
 
 [Defer Import Eval]: https://github.com/tc39/proposal-defer-import-eval
-[ESM Phase Imports]: https://github.com/tc39/proposal-esm-phase-imports
