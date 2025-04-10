@@ -84,7 +84,7 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_) is *true*, return OrdinaryGetOwnProperty(_O_, _P_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_) is *true*, return OrdinaryGetOwnProperty(_O_, _P_).
           1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
           1. If _exports_ does not contain _P_, return *undefined*.
           1. Let _value_ be ? _O_.[[Get]](_P_, _O_).
@@ -104,7 +104,7 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryDefineOwnProperty(_O_, _P_, _Desc_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryDefineOwnProperty(_O_, _P_, _Desc_).
           1. Let _current_ be ? _O_.[[GetOwnProperty]](_P_).
           1. NOTE: If _O_.[[Deferred]] is *true*, the step above will ensure that the module is evaluated.
           1. If _current_ is *undefined*, return *false*.
