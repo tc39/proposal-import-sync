@@ -85,7 +85,7 @@ contributors: Guy Bedford, Marco Ippolito
         </dl>
         <emu-alg>
           1. If IsSymbolLikeNamespaceKey(_P_, _O_) is *true*, return OrdinaryGetOwnProperty(_O_, _P_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ does not contain _P_, return *undefined*.
           1. Let _value_ be ? _O_.[[Get]](_P_, _O_).
           1. Return PropertyDescriptor { [[Value]]: _value_, [[Writable]]: *true*, [[Enumerable]]: *true*, [[Configurable]]: *false* }.
@@ -128,8 +128,8 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryHasProperty(_O_, _P_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryHasProperty(_O_, _P_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ contains _P_, return *true*.
           1. Return *false*.
         </emu-alg>
@@ -147,8 +147,8 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryGet(_O_, _P_, _Receiver_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryGet(_O_, _P_, _Receiver_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ does not contain _P_, return *undefined*.
           1. Let _m_ be _O_.[[Module]].
           1. Let _binding_ be _m_.ResolveExport(_P_).
