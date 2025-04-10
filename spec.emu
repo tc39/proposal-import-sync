@@ -84,8 +84,8 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_) is *true*, return OrdinaryGetOwnProperty(_O_, _P_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_) is *true*, return OrdinaryGetOwnProperty(_O_, _P_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ does not contain _P_, return *undefined*.
           1. Let _value_ be ? _O_.[[Get]](_P_, _O_).
           1. Return PropertyDescriptor { [[Value]]: _value_, [[Writable]]: *true*, [[Enumerable]]: *true*, [[Configurable]]: *false* }.
@@ -104,7 +104,7 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryDefineOwnProperty(_O_, _P_, _Desc_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryDefineOwnProperty(_O_, _P_, _Desc_).
           1. Let _current_ be ? _O_.[[GetOwnProperty]](_P_).
           1. NOTE: If _O_.[[Deferred]] is *true*, the step above will ensure that the module is evaluated.
           1. If _current_ is *undefined*, return *false*.
@@ -128,8 +128,8 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryHasProperty(_O_, _P_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryHasProperty(_O_, _P_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ contains _P_, return *true*.
           1. Return *false*.
         </emu-alg>
@@ -147,8 +147,8 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryGet(_O_, _P_, _Receiver_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryGet(_O_, _P_, _Receiver_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ does not contain _P_, return *undefined*.
           1. Let _m_ be _O_.[[Module]].
           1. Let _binding_ be _m_.ResolveExport(_P_).
@@ -195,8 +195,8 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. If <del>_P_ is a Symbol</del>IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryDelete(_O_, _P_).
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. If IsSymbolLikeNamespaceKey(_P_, _O_), return ! OrdinaryDelete(_O_, _P_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _exports_ contains _P_, return *false*.
           1. Return *true*.
         </emu-alg>
@@ -209,7 +209,7 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>a module namespace exotic object _O_</dd>
         </dl>
         <emu-alg>
-          1. Let _exports_ be <del>_O_.[[Exports]]</del>? GetModuleExportsList(_O_).
+          1. Let _exports_ be ? GetModuleExportsList(_O_).
           1. If _O_.[[Deferred]] is *true*, and _exports_ contains *"then"*, then
             1. Set _exports_ to a copy of _exports_.
             1. Remove *"then"* from _exports_.
@@ -231,14 +231,12 @@ contributors: Guy Bedford, Marco Ippolito
           <dd>It is used to specify the creation of new module namespace exotic objects.</dd>
         </dl>
         <emu-alg>
-          1. <del>Assert: _module_.[[Namespace]] is ~empty~.</del>
           1. Let _internalSlotsList_ be the internal slots listed in <emu-xref href="#table-internal-slots-of-module-namespace-exotic-objects"></emu-xref>.
           1. Let _M_ be MakeBasicObject(_internalSlotsList_).
           1. Set _M_'s essential internal methods to the definitions specified in <emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref>.
           1. Set _M_.[[Module]] to _module_.
           1. [declared="comparefn"] Let _sortedExports_ be a List whose elements are the elements of _exports_ ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using *undefined* as _comparefn_.
           1. Set _M_.[[Exports]] to _sortedExports_.
-          1. <del>Create own properties of _M_ corresponding to the definitions in <emu-xref href="#sec-module-namespace-objects"></emu-xref>.</del>
           1. If _phase_ is ~defer~, then
             1. Assert: _module_.[[DeferredNamespace]] is ~empty~.
             1. Set _module_.[[DeferredNamespace]] to _M_.
@@ -327,8 +325,6 @@ contributors: Guy Bedford, Marco Ippolito
     <h2>Syntax</h2>
     <emu-grammar type="definition">
       ImportCall[Yield, Await] :
-        <del>`import` `(` AssignmentExpression[+In, ?Yield, ?Await] `,`? `)`</del>
-        <del>`import` `(` AssignmentExpression[+In, ?Yield, ?Await] `,` AssignmentExpression[+In, ?Yield, ?Await] `,`? `)`</del>
         `import` ImportCallArguments[?Yield, ?Await]
         `import` `.` `defer` ImportCallArguments[?Yield, ?Await]
 
@@ -348,16 +344,6 @@ contributors: Guy Bedford, Marco Ippolito
 
       <emu-clause id="sec-import-call-runtime-semantics-evaluation" type="sdo">
         <h1>Runtime Semantics: Evaluation</h1>
-
-        <emu-grammar><del>ImportCall : `import` `(` AssignmentExpression `,`? `)`</del></emu-grammar>
-        <emu-alg>
-          1. <del>Return ? EvaluateImportCall(|AssignmentExpression|).</del>
-        </emu-alg>
-
-        <emu-grammar><del>ImportCall : `import` `(` AssignmentExpression `,` AssignmentExpression `,`? `)`</del></emu-grammar>
-        <emu-alg>
-          1. <del>Return ? EvaluateImportCall(the first |AssignmentExpression|, the second |AssignmentExpression|).</del>
-        </emu-alg>
 
         <emu-grammar>ImportCall : `import` ImportCallArguments</emu-grammar>
         <emu-alg>
@@ -406,21 +392,13 @@ contributors: Guy Bedford, Marco Ippolito
           EvaluateImportCall (
             _arguments_: a Parse Node,
             _phase_: ~defer~ or ~evaluation~,
-            <del>_specifierExpression_: a Parse Node,</del>
-            <del>optional _optionsExpression_: a Parse Node,</del>
           ): either a normal completion containing a Promise or an abrupt completion
         </h1>
         <dl class="header"></dl>
         <emu-alg>
           1. Let _referrer_ be GetActiveScriptOrModule().
           1. If _referrer_ is *null*, set _referrer_ to the current Realm Record.
-          1. <del>Let _specifierRef_ be ? Evaluation of _specifierExpression_.</del>
           1. Let _specifier_ be ? <del>GetValue(_specifierRef_)</del>EvaluateImportCallSpecifier of _arguments_.
-          1. <del>If _optionsExpression_ is present, then</del>
-            1. <del>Let _optionsRef_ be ? Evaluation of _optionsExpression_.</del>
-            1. <del>Let _options_ be ? GetValue(_optionsRef_).</del>
-          1. <del>Else,</del>
-            1. <del>Let _options_ be *undefined*.</del>
           1. Let _options_ be ? EvaluateImportCallOptions of _arguments_.
           1. Let _promiseCapability_ be ! NewPromiseCapability(%Promise%).
           1. Let _specifierString_ be Completion(ToString(_specifier_)).
@@ -482,7 +460,6 @@ contributors: Guy Bedford, Marco Ippolito
               1. If _link_ is an abrupt completion, then
                 1. Perform ! Call(_promiseCapability_.[[Reject]], *undefined*, &laquo; _link_.[[Value]] &raquo;).
                 1. Return ~unused~.
-              1. <del>Let _evaluatePromise_ be _module_.Evaluate().</del>
               1. Let _fulfilledClosure_ be a new Abstract Closure with no parameters that captures _module_, _phase_, and _promiseCapability_ and performs the following steps when called:
                 1. Let _namespace_ be GetModuleNamespace(_module_, _phase_).
                 1. Perform ! Call(_promiseCapability_.[[Resolve]], *undefined*, &laquo; _namespace_ &raquo;).
@@ -677,10 +654,6 @@ contributors: Guy Bedford, Marco Ippolito
           1. Let _attributes_ be WithClauseToAttributes of |WithClause|.
           1. Return a List whose sole element is the ModuleRequest Record { [[Specifier]]: _specifier_, [[Attributes]]: _attributes_, [[Phase]]: ~defer~ }.
         </emu-alg>
-        <emu-grammar><del>ModuleSpecifier : StringLiteral</del></emu-grammar>
-        <emu-alg>
-          1. <del>Return a List whose sole element is the SV of |StringLiteral|.</del>
-        </emu-alg>
         <emu-grammar>
           ExportDeclaration : `export` ExportFromClause FromClause `;`
         </emu-grammar>
@@ -856,7 +829,6 @@ contributors: Guy Bedford, Marco Ippolito
           </dl>
 
           <emu-alg>
-            1. <del>Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.</del>.
             1. Assert: None of _module_ or any of its recursive dependencies have [[Status]] set to ~evaluating~, ~linking~, ~unlinked~, or ~new~.
             1. Assert: _module_.[[Status]] is one of ~linked~, ~evaluating-async~, or ~evaluated~.
             1. If _module_.[[Status]] is either ~evaluating-async~ or ~evaluated~, set _module_ to _module_.[[CycleRoot]].
@@ -899,10 +871,6 @@ contributors: Guy Bedford, Marco Ippolito
 
             <emu-alg>
               1. If _module_ is not a Cyclic Module Record, then
-                1. <del>Let _promise_ be ! _module_.Evaluate().</del>
-                1. <del>Assert: _promise_.[[PromiseState]] is not ~pending~.</del>
-                1. <del>If _promise_.[[PromiseState]] is ~rejected~, then</del>
-                  1. <del>Return ThrowCompletion(_promise_.[[PromiseResult]]).</del>
                 1. Perform ? EvaluateSync(_module_).
                 1. Return _index_.
               1. If _module_.[[Status]] is either ~evaluating-async~ or ~evaluated~, then
@@ -926,8 +894,6 @@ contributors: Guy Bedford, Marco Ippolito
                 1. Else if _evaluationList_ does not contain _requiredModule_, then
                   1. Append _requiredModule_ to _evaluationList_.
               1. Append _module_ to _stack_.
-              1. <del>For each ModuleRequest Record _request_ of _module_.[[RequestedModules]], do</del>
-                1. <del>Let _requiredModule_ be GetImportedModule(_module_, _request_).</del>
               1. For each Module Record _requiredModule_ of _evaluationList_, do
                 1. Set _index_ to ? InnerModuleEvaluation(_requiredModule_, _stack_, _index_).
                 1. If _requiredModule_ is a Cyclic Module Record, then
@@ -1904,7 +1870,7 @@ contributors: Guy Bedford, Marco Ippolito
         </emu-alg>
         <emu-grammar>ImportDeclaration : `import` ImportClause FromClause WithClause? `;`</emu-grammar>
         <emu-alg>
-          1. Let _module_ be <del>the sole element of ModuleRequests</del>SV of |FromClause|.
+          1. Let _module_ be SV of |FromClause|.
           1. Return ImportEntriesForModule of |ImportClause| with arguments _module_.
         </emu-alg>
         <emu-grammar>ImportDeclaration : `import` `defer` NameSpaceImport FromClause WithClause? `;`</emu-grammar>
@@ -1917,22 +1883,6 @@ contributors: Guy Bedford, Marco Ippolito
           1. Return a new empty List.
         </emu-alg>
       </emu-clause>
-    </emu-clause>
-  </emu-clause>
-</emu-clause>
-
-<emu-clause id="sec-reflection" number="28">
-  <h1>Reflection</h1>
-
-  <emu-clause id="sec-module-namespace-objects" number="3">
-    <h1><del>Module Namespace Objects</del></h1>
-    <p><del>A Module Namespace Object is a module namespace exotic object that provides runtime property-based access to a module's exported bindings. There is no constructor function for Module Namespace Objects. Instead, such an object is created for each module that is imported by an |ImportDeclaration| that contains a |NameSpaceImport|.</del></p>
-    <p><del>In addition to the properties specified in <emu-xref href="#sec-module-namespace-exotic-objects"></emu-xref> each Module Namespace Object has the following own property:</del></p>
-
-    <emu-clause oldids="sec-@@tostringtag" id="sec-%symbol.tostringtag%">
-      <h1><del>%Symbol.toStringTag%</del></h1>
-      <p><del>The initial value of the %Symbol.toStringTag% property is the String value *"Module"*.</del></p>
-      <p><del>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</del></p>
     </emu-clause>
   </emu-clause>
 </emu-clause>
