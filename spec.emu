@@ -54,7 +54,7 @@ contributors: Guy Bedford
 
         <emu-grammar><ins>ImportCall : `import` `.` `sync` ImportCallArguments</ins></emu-grammar>
         <emu-alg>
-          1. <ins>Return ? SyncImportCall(|ImportCallArguments|).</ins>
+          1. <ins>Return ? ImportCallSync(|ImportCallArguments|).</ins>
         </emu-alg>
       </emu-clause>
 
@@ -64,8 +64,6 @@ contributors: Guy Bedford
             _arguments_: a Parse Node
           ): either a normal completion or an abrupt completion</ins>
         </h1>
-        <dl class="header"></dl>
-        <emu-alg>
         <dl class="header"></dl>
         <emu-alg>
           1. Let _referrer_ be GetActiveScriptOrModule().
@@ -92,13 +90,13 @@ contributors: Guy Bedford
             1. If AllImportAttributesSupported(_attributes_) is *false*, then
               1. Throw a *TypeError* exception.
             1. Sort _attributes_ according to the lexicographic order of their [[Key]] field, treating the value of each such field as a sequence of UTF-16 code unit values. NOTE: This sorting is observable only in that hosts are prohibited from changing behaviour based on the order in which attributes are enumerated.
-          1. Let _moduleRequest_ be a new ModuleRequest Record { [[Specifier]]: _specifierString_, [[Attributes]]: _attributes_, [[Phase]]: _phase_ }.
+          1. Let _moduleRequest_ be a new ModuleRequest Record { [[Specifier]]: _specifierString_, [[Attributes]]: _attributes_, [[Phase]]: ~evaluation~ }.
           1. Let _moduleCompletion_ be NormalCompletion(~empty~).
           1. Perform HostLoadImportedModule(_referrer_, _moduleRequest_, ~empty~, _moduleCompletion_).
           1. NOTE: HostLoadImportedModule will update _moduleCompletion_ synchronously either updating its value to be a Module Record, or setting it to be a throw completion.
           1. Let _module_ be ? _moduleCompletion_.
           1. Perform ? _module_.LoadRequestedModulesSync().
-          1. Perform ? _module_.Link();
+          1. Perform ? _module_.Link().
           1. If ReadyForSyncExecution(_module_) is *false*, throw a *TypeError* exception.
           1. Perform ? EvaluateModuleSync(_module_).
           1. Return GetModuleNamespace(_module_, ~evaluation~).
@@ -584,7 +582,7 @@ contributors: Guy Bedford
             </dl>
 
             <emu-alg>
-              TODO
+              1. TODO.
             </emu-alg>
           </emu-clause>
 
@@ -810,7 +808,8 @@ contributors: Guy Bedford
             _referrer_: a Script Record, a Cyclic Module Record, or a Realm Record,
             _moduleRequest_: a ModuleRequest Record,
             _hostDefined_: anything,
-            _payload_: a GraphLoadingState Record <del>or</del><ins>, </ins>a PromiseCapability Record<ins>, or a Completion Record</ins>,
+            <del>_payload_: a GraphLoadingState Record or a PromiseCapability Record,</del>
+            <ins>_payload_: a GraphLoadingState Record, a PromiseCapability Record, or a Completion Record,</ins>
           ): ~unused~
         </h1>
         <dl class="header">
@@ -862,7 +861,8 @@ contributors: Guy Bedford
           FinishLoadingImportedModule (
             _referrer_: a Script Record, a Cyclic Module Record, or a Realm Record,
             _moduleRequest_: a ModuleRequest Record,
-            _payload_: a GraphLoadingState Record <del>or</del><ins>, </ins> a PromiseCapability Record<ins>, or a Completion Record</ins>,
+            <del>_payload_: a GraphLoadingState Record or a PromiseCapability Record,</del>
+            <ins>_payload_: a GraphLoadingState Record, a PromiseCapability Record, or a Completion Record,</ins>
             _result_: either a normal completion containing a Module Record or a throw completion,
           ): ~unused~
         </h1>
