@@ -2,7 +2,7 @@
 
 ## Status
 
-Champions: Guy Bedford, Marco Ippolito
+Champions: Guy Bedford
 Stage: 1
 
 ## Problem Statement
