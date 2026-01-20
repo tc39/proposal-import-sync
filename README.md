@@ -3,7 +3,7 @@
 ## Status
 
 Champions: Guy Bedford
-Stage: 1
+Stage: 2
 
 ## Problem Statement
 
