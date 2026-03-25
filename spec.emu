@@ -62,7 +62,7 @@ contributors: Guy Bedford
         <h1>
           <ins>ImportCallSync (
             _arguments_: a Parse Node
-          ): either a normal completion or an abrupt completion</ins>
+          ): either a normal completion containing either a Module Namespace Object or *null*, or an abrupt completion</ins>
         </h1>
         <dl class="header"></dl>
         <emu-alg>
@@ -94,10 +94,13 @@ contributors: Guy Bedford
           1. Let _moduleCompletion_ be NormalCompletion(~empty~).
           1. Perform HostLoadImportedModule(_referrer_, _moduleRequest_, ~empty~, _moduleCompletion_).
           1. NOTE: HostLoadImportedModule will update _moduleCompletion_ synchronously either updating its value to be a Module Record, or setting it to be a throw completion.
-          1. Let _module_ be ? _moduleCompletion_.
-          1. Perform ? _module_.LoadRequestedModulesSync().
-          1. Perform ? _module_.Link().
-          1. If ReadyForSyncExecution(_module_) is *false*, throw a *TypeError* exception.
+          1. If _moduleCompletion_ is a throw completion, return *null*.
+          1. Let _module_ be _moduleCompletion_.[[Value]].
+          1. Let _loadResult_ be Completion(_module_.LoadRequestedModulesSync()).
+          1. If _loadResult_ is a throw completion, return *null*.
+          1. Let _linkResult_ be Completion(_module_.Link()).
+          1. If _linkResult_ is a throw completion, return *null*.
+          1. If ReadyForSyncExecution(_module_) is *false*, return *null*.
           1. Perform ? EvaluateModuleSync(_module_).
           1. Return GetModuleNamespace(_module_, ~evaluation~).
         </emu-alg>
