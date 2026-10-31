@@ -864,29 +864,3 @@ contributors: Guy Bedford
     </emu-clause>
   </emu-clause>
 </emu-clause>
-
-<emu-annex id="sec-integration-deferred-reexports">
-  <h1>Integration with Deferred Re-exports</h1>
-
-  <emu-note type="editor">
-    <p>This specification is written against <a href="https://tc39.es/proposal-defer-import-eval/">Deferred Import Evaluation</a>. When <a href="https://github.com/tc39/proposal-deferred-reexports">Deferred Re-exports</a> lands, `import.sync` is intended to follow the semantics of `import()` with an `exports` option as closely as possible, with the integration points below.</p>
-  </emu-note>
-
-  <ul>
-    <li>
-      ImportCallSync reads an `exports` option into _importedNames_ exactly as EvaluateImportCall does, defaulting to ~all~, and step <emu-xref href="#step-ImportCallSync-request"></emu-xref> sets [[ImportedNames]] of _moduleRequest_ to the ImportedNames Record { [[Direct]]: « », [[Namespace]]: _importedNames_ }. Since FinishLoadingImportedModule passes AllImportedNames(_moduleRequest_) through ContinueModuleLoading to InnerModuleLoading, the synchronous loading process then also loads the `export defer` dependencies needed for _importedNames_, including those of modules which are already loaded or evaluated.
-    </li>
-    <li>
-      Step <emu-xref href="#step-ImportCallSync-link"></emu-xref> passes _importedNames_ to Link, followed by EnsureResolvableBinding for each name in _importedNames_, throwing a *ReferenceError* on failure as ContinueDynamicImport does.
-    </li>
-    <li>
-      Step <emu-xref href="#step-ImportCallSync-ready"></emu-xref> becomes ReadyForSyncExecution(_module_, _importedNames_, ~gather-async-deps~). `import()` evaluates the asynchronous dependencies of the namespace's deferred re-exports in advance, which `import.sync` cannot do, so their presence results in *null*. This also ensures later accesses of deferred bindings on the returned namespace do not throw due to top-level await.
-    </li>
-    <li>
-      Step <emu-xref href="#step-ImportCallSync-evaluate"></emu-xref> becomes EvaluateModuleSync(_module_, the ImportedNames Record { [[Direct]]: « », [[Namespace]]: _importedNames_ }), so that deferred re-exports are only evaluated on access of the corresponding binding, as for `import()`. Step <emu-xref href="#step-ImportCallSync-namespace"></emu-xref> passes _importedNames_ to GetModuleNamespace.
-    </li>
-    <li>
-      Step <emu-xref href="#step-ImportCallSync-module"></emu-xref> uses ModuleRequestsKeyEqual in place of ModuleRequestsEqual.
-    </li>
-  </ul>
-</emu-annex>
