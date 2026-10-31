@@ -49,6 +49,14 @@ await), `import.sync` returns `null` rather than throwing an error.
 
 Whether a module is synchronously available is a host-determined property.
 
+`null` only ever means that completing the import would require waiting on asynchronous work. Errors
+that are known synchronously, such as resolution errors, previously failed loads, parse errors, linking
+errors and evaluation errors, are always thrown. This allows a sync fast path with an async fallback:
+
+```js
+const lib = import.sync('lib') ?? await import('lib');
+```
+
 ## Use Cases
 
 ### Getting an Already-Loaded Module
