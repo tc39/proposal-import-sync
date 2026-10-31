@@ -62,7 +62,7 @@ contributors: Guy Bedford
         <h1>
           <ins>ImportCallSync (
             _arguments_: a Parse Node
-          ): either a normal completion or an abrupt completion</ins>
+          ): either a normal completion containing either a Module Namespace Object or *null*, or an abrupt completion</ins>
         </h1>
         <dl class="header"></dl>
         <emu-alg>
@@ -90,17 +90,23 @@ contributors: Guy Bedford
             1. If AllImportAttributesSupported(_attributes_) is *false*, then
               1. Throw a *TypeError* exception.
             1. Sort _attributes_ according to the lexicographic order of their [[Key]] field, treating the value of each such field as a sequence of UTF-16 code unit values. NOTE: This sorting is observable only in that hosts are prohibited from changing behaviour based on the order in which attributes are enumerated.
-          1. Let _moduleRequest_ be a new ModuleRequest Record { [[Specifier]]: _specifierString_, [[Attributes]]: _attributes_, [[Phase]]: ~evaluation~ }.
-          1. Let _moduleCompletion_ be NormalCompletion(~empty~).
-          1. Perform HostLoadImportedModule(_referrer_, _moduleRequest_, ~empty~, _moduleCompletion_).
-          1. NOTE: HostLoadImportedModule will update _moduleCompletion_ synchronously either updating its value to be a Module Record, or setting it to be a throw completion.
-          1. Let _module_ be ? _moduleCompletion_.
-          1. Perform ? _module_.LoadRequestedModulesSync().
-          1. Perform ? _module_.Link().
-          1. If ReadyForSyncExecution(_module_) is *false*, throw a *TypeError* exception.
-          1. Perform ? EvaluateModuleSync(_module_).
-          1. Return GetModuleNamespace(_module_, ~evaluation~).
+          1. [id="step-ImportCallSync-request"] Let _moduleRequest_ be a new ModuleRequest Record { [[Specifier]]: _specifierString_, [[Attributes]]: _attributes_, [[Phase]]: ~evaluation~ }.
+          1. Let _state_ be the GraphLoadingState Record { [[IsLoading]]: *true*, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: ~sync~, [[Result]]: ~empty~, [[HostDefined]]: ~empty~ }.
+          1. Perform HostLoadImportedModule(_referrer_, _moduleRequest_, ~empty~, _state_).
+          1. NOTE: HostLoadImportedModule synchronously performs FinishLoadingImportedModule, which loads the module and its dependency graph through ContinueModuleLoading.
+          1. Assert: _state_.[[IsLoading]] is *false*.
+          1. If _state_.[[Result]] is ~unavailable~, return *null*.
+          1. Perform ? _state_.[[Result]].
+          1. [id="step-ImportCallSync-module"] Let _record_ be the LoadedModuleRequest Record in _referrer_.[[LoadedModules]] such that ModuleRequestsEqual(_record_, _moduleRequest_) is *true*.
+          1. Let _module_ be _record_.[[Module]].
+          1. [id="step-ImportCallSync-link"] Perform ? _module_.Link().
+          1. [id="step-ImportCallSync-ready"] If ReadyForSyncExecution(_module_) is *false*, return *null*.
+          1. [id="step-ImportCallSync-evaluate"] Perform ? EvaluateModuleSync(_module_).
+          1. [id="step-ImportCallSync-namespace"] Return GetModuleNamespace(_module_, ~evaluation~).
         </emu-alg>
+        <emu-note>
+          <p>*null* is returned only when completing the import would require waiting on asynchronous work: either loading a module that the host cannot provide synchronously, or evaluating a module graph containing top-level await or modules that are still evaluating. Errors which can be determined synchronously, such as resolution errors, already-known load or parse errors, linking errors, and evaluation errors, are thrown.</p>
+        </emu-note>
       </emu-clause>
     </emu-clause>
   </emu-clause>
@@ -224,14 +230,6 @@ contributors: Guy Bedford
             </tr>
             <tr>
               <td>
-                <ins>LoadRequestedModulesSync([_hostDefined_])</ins>
-              </td>
-              <td>
-                <p><ins>Prepares the module for linking by recursively loading all its dependencies synchronously.</ins></p>
-              </td>
-            </tr>
-            <tr>
-              <td>
                 GetExportedNames([_exportStarSet_])
               </td>
               <td>
@@ -269,29 +267,6 @@ contributors: Guy Bedford
             </tr>
           </table>
         </emu-table>
-
-        <emu-clause id="sec-EvaluateModuleSync" type="abstract operation">
-          <h1>
-            EvaluateModuleSync (
-              _module_: a Module Record,
-            ): either a normal completion containing ~unused~ or a throw completion
-          </h1>
-          <dl class="header">
-            <dt>description</dt>
-            <dd>It synchronously evaluates _module_, provided that the caller guarantees that _module_'s evaluation will return an already settled promise.</dd>
-          </dl>
-
-          <emu-alg>
-            1. Assert: _module_ is not a Cyclic Module Record.
-            1. Let _promise_ be _module_.Evaluate().
-            1. Assert: _promise_.[[PromiseState]] is either ~fulfilled~ or ~rejected~.
-            1. If _promise_.[[PromiseState]] is ~rejected~, then
-              1. If _promise_.[[PromiseIsHandled]] is *false*, perform HostPromiseRejectionTracker(_promise_, *"handle"*).
-              1. Set _promise_.[[PromiseIsHandled]] to *true*.
-              1. Return ThrowCompletion(_promise_.[[PromiseResult]]).
-            1. Return ~unused~.
-          </emu-alg>
-        </emu-clause>
       </emu-clause>
 
       <emu-clause id="sec-cyclic-module-records" number="6">
@@ -489,10 +464,21 @@ contributors: Guy Bedford
                 [[PromiseCapability]]
               </td>
               <td>
-                a PromiseCapability Record<ins> or ~syncImport~</ins>
+                a PromiseCapability Record<ins> or ~sync~</ins>
               </td>
               <td>
-                The promise to resolve when the loading process finishes<ins>, or ~syncImport~ for a synchronous loading operation</ins>.
+                The promise to resolve when the loading process finishes<ins>, or ~sync~ if the loading process must complete synchronously</ins>.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <ins>[[Result]]</ins>
+              </td>
+              <td>
+                <ins>~empty~, ~unavailable~, a normal completion containing ~unused~, or a throw completion</ins>
+              </td>
+              <td>
+                <ins>If [[PromiseCapability]] is ~sync~, the result of the loading process once it finishes. Otherwise, ~empty~.</ins>
               </td>
             </tr>
             <tr>
@@ -569,23 +555,6 @@ contributors: Guy Bedford
             <code>import()</code> expressions never set the _hostDefined_ parameter.
           </emu-note>
 
-          <emu-clause id="sec-InnerModuleLoadingSync" type="abstract operation">
-            <h1>
-              InnerModuleLoadingSync (
-                _state_: a GraphLoadingState Record,
-                _module_: a Module Record,
-              ): ~unused~
-            </h1>
-            <dl class="header">
-              <dt>description</dt>
-              <dd>It is used by LoadRequestedModules to recursively perform the actual loading process for _module_'s dependency graph.</dd>
-            </dl>
-
-            <emu-alg>
-              1. TODO.
-            </emu-alg>
-          </emu-clause>
-
           <emu-clause id="sec-InnerModuleLoading" type="abstract operation">
             <h1>
               InnerModuleLoading (
@@ -620,7 +589,8 @@ contributors: Guy Bedford
                 1. Set _state_.[[IsLoading]] to *false*.
                 1. For each Record _loaded_ of _state_.[[Visited]], do
                   1. If _loaded_.[[Status]] is ~new~, set _loaded_.[[Status]] to ~unlinked~.
-                1. Perform ! Call(_state_.[[PromiseCapability]].[[Resolve]], *undefined*, « *undefined* »).
+                1. <ins>If _state_.[[PromiseCapability]] is ~sync~, set _state_.[[Result]] to NormalCompletion(~unused~).</ins>
+                1. <ins>Else,</ins> perform ! Call(_state_.[[PromiseCapability]].[[Resolve]], *undefined*, « *undefined* »).
               1. Return ~unused~.
             </emu-alg>
           </emu-clause>
@@ -629,7 +599,7 @@ contributors: Guy Bedford
             <h1>
               ContinueModuleLoading (
                 _state_: a GraphLoadingState Record,
-                _moduleCompletion_: either a normal completion containing a Module Record or a throw completion,
+                _moduleCompletion_: either a normal completion containing a Module Record<ins>, ~unavailable~,</ins> or a throw completion,
               ): ~unused~
             </h1>
             <dl class="header">
@@ -639,11 +609,16 @@ contributors: Guy Bedford
 
             <emu-alg>
               1. If _state_.[[IsLoading]] is *false*, return ~unused~.
-              1. If _moduleCompletion_ is a normal completion, then
+              1. <ins>If _moduleCompletion_ is ~unavailable~, then</ins>
+                1. <ins>Assert: _state_.[[PromiseCapability]] is ~sync~.</ins>
+                1. <ins>Set _state_.[[IsLoading]] to *false*.</ins>
+                1. <ins>Set _state_.[[Result]] to ~unavailable~.</ins>
+              1. <del>If</del><ins>Else if</ins> _moduleCompletion_ is a normal completion, then
                 1. Perform InnerModuleLoading(_state_, _moduleCompletion_.[[Value]]).
               1. Else,
                 1. Set _state_.[[IsLoading]] to *false*.
-                1. Perform ! Call(_state_.[[PromiseCapability]].[[Reject]], *undefined*, « _moduleCompletion_.[[Value]] »).
+                1. <ins>If _state_.[[PromiseCapability]] is ~sync~, set _state_.[[Result]] to _moduleCompletion_.</ins>
+                1. <ins>Else,</ins> perform ! Call(_state_.[[PromiseCapability]].[[Reject]], *undefined*, « _moduleCompletion_.[[Value]] »).
               1. Return ~unused~.
             </emu-alg>
           </emu-clause>
@@ -808,8 +783,7 @@ contributors: Guy Bedford
             _referrer_: a Script Record, a Cyclic Module Record, or a Realm Record,
             _moduleRequest_: a ModuleRequest Record,
             _hostDefined_: anything,
-            <del>_payload_: a GraphLoadingState Record or a PromiseCapability Record,</del>
-            <ins>_payload_: a GraphLoadingState Record, a PromiseCapability Record, or a Completion Record,</ins>
+            _payload_: a GraphLoadingState Record or a PromiseCapability Record,
           ): ~unused~
         </h1>
         <dl class="header">
@@ -831,7 +805,7 @@ contributors: Guy Bedford
             The host environment must perform FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_), where _result_ is either a normal completion containing the loaded Module Record or a throw completion, either synchronously or asynchronously.
           </li>
           <li>
-            <ins>If _payload_ is a CompletionRecord, or _payload_ is a GraphLoadingState and _payload_.[[PromiseCapability]] is ~syncImport~, then the host environment must call FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_) synchronously.</ins>
+            <ins>If _payload_ is a GraphLoadingState Record whose [[PromiseCapability]] is ~sync~, the host environment must perform FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_) synchronously, before HostLoadImportedModule returns. In this case _result_ may also be ~unavailable~, which the host must only use if loading the module would require waiting on asynchronous work. Failures that can be determined synchronously, such as resolution errors or previously failed loads, must be throw completions.</ins>
           </li>
           <li>
             <p>If this operation is called multiple times with two (_referrer_, _moduleRequest_) pairs such that:</p>
@@ -839,7 +813,7 @@ contributors: Guy Bedford
               <li>the first _referrer_ is the same as the second _referrer_;</li>
               <li>ModuleRequestsEqual(the first _moduleRequest_, the second _moduleRequest_) is *true*;</li>
             </ul>
-            <p>and it performs FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_) where _result_ is a normal completion, then it must perform FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_) with the same _result_ each time.</p>
+            <p>and it performs FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_) where _result_ is a normal completion, then it must perform FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_) with the same _result_ each time<ins>, including when _payload_ is a GraphLoadingState Record whose [[PromiseCapability]] is ~sync~</ins>.</p>
           </li>
           <li>
             <p>If _moduleRequest_.[[Attributes]] has an entry _entry_ such that _entry_.[[Key]] is *"type"* and _entry_.[[Value]] is *"json"*, when the host environment performs FinishLoadingImportedModule(_referrer_, _moduleRequest_, _payload_, _result_), _result_ must either be the Completion Record returned by an invocation of ParseJSONModule or a throw completion.</p>
@@ -854,6 +828,10 @@ contributors: Guy Bedford
         <emu-note>
           <p>The above text requires that hosts support JSON modules when imported with `type: "json"` (and HostLoadImportedModule completes normally), but it does not prohibit hosts from supporting JSON modules when imported without `type: "json"`.</p>
         </emu-note>
+
+        <emu-note>
+          <p><ins>A host may perform synchronous I/O to load modules, in which case it need never use ~unavailable~. A host that loads modules over the network, such as a web browser, might only complete normally for modules which have already been fetched, using ~unavailable~ otherwise.</ins></p>
+        </emu-note>
       </emu-clause>
 
       <emu-clause id="sec-FinishLoadingImportedModule" type="abstract operation" oldids="sec-finishdynamicimport" number="11">
@@ -861,9 +839,8 @@ contributors: Guy Bedford
           FinishLoadingImportedModule (
             _referrer_: a Script Record, a Cyclic Module Record, or a Realm Record,
             _moduleRequest_: a ModuleRequest Record,
-            <del>_payload_: a GraphLoadingState Record or a PromiseCapability Record,</del>
-            <ins>_payload_: a GraphLoadingState Record, a PromiseCapability Record, or a Completion Record,</ins>
-            _result_: either a normal completion containing a Module Record or a throw completion,
+            _payload_: a GraphLoadingState Record or a PromiseCapability Record,
+            _result_: either a normal completion containing a Module Record<ins>, ~unavailable~,</ins> or a throw completion,
           ): ~unused~
         </h1>
         <dl class="header">
@@ -871,17 +848,14 @@ contributors: Guy Bedford
           <dd></dd>
         </dl>
         <emu-alg>
-          1. If _result_ is a normal completion, then
+          1. <ins>Assert: If _result_ is ~unavailable~, then _payload_ is a GraphLoadingState Record and _payload_.[[PromiseCapability]] is ~sync~.</ins>
+          1. If _result_ is a normal completion<ins> containing a Module Record</ins>, then
             1. If _referrer_.[[LoadedModules]] contains a LoadedModuleRequest Record _record_ such that ModuleRequestsEqual(_record_, _moduleRequest_) is *true*, then
               1. Assert: _record_.[[Module]] and _result_.[[Value]] are the same Module Record.
             1. Else,
               1. Append the LoadedModuleRequest Record { [[Specifier]]: _moduleRequest_.[[Specifier]], [[Attributes]]: _moduleRequest_.[[Attributes]], [[Module]]: _result_.[[Value]] } to _referrer_.[[LoadedModules]].
           1. If _payload_ is a GraphLoadingState Record, then
             1. Perform ContinueModuleLoading(_payload_, _result_).
-          1. <ins>Else if _payload_ is a Completion Record, then</ins>
-            1. Assert: _result_ is a normal completion or a throw completion.
-            1. If _result_ is a throw completion, set _payload_.[[Type]] to ~throw~.
-            1. Set _payload_.[[Value]] to _result_.[[Value]].
           1. Else,
             1. Perform ContinueDynamicImport(_payload_, _result_, _moduleRequest_.[[Phase]]).
           1. Return ~unused~.

@@ -44,10 +44,18 @@ We propose to expose an explicit synchronous import function for ES modules, as 
 const ns = import.sync('./mod.js');
 ```
 
-The major design of the proposal is a new `Error` which is thrown when a module is not synchronously
-available, or uses top-level await.
+When a module is not synchronously available (e.g. it requires async I/O to fetch, or uses top-level
+await), `import.sync` returns `null` rather than throwing an error.
 
-Whether a module is synchronously available would otherwise be a host-determined property.
+Whether a module is synchronously available is a host-determined property.
+
+`null` only ever means that completing the import would require waiting on asynchronous work. Errors
+that are known synchronously, such as resolution errors, previously failed loads, parse errors, linking
+errors and evaluation errors, are always thrown. This allows a sync fast path with an async fallback:
+
+```js
+const lib = import.sync('lib') ?? await import('lib');
+```
 
 ## Use Cases
 
@@ -66,16 +74,17 @@ const app = import.sync('app');
 
 ### Conditional Loading
 
-Just like with dynamic import, with a synchronous import, it's possible to check if a module or builtin is available, but synchronously.
-
-For example, checking if host builtins are available:
+Because `import.sync` returns `null` when a module is not synchronously available, optional chaining
+can be used to conditionally access features:
 
 ```js
-let fs;
-try {
-  fs = import.sync('node:fs');
-} catch {}
+import.sync('lib')?.feature();
+```
 
+More generally, it's possible to check if a module or builtin is available synchronously:
+
+```js
+const fs = import.sync('node:fs');
 if (fs) {
   // Use node:fs, only if it is available
 }
@@ -84,11 +93,7 @@ if (fs) {
 Or a library that conditionally binds to a framework dependency:
 
 ```js
-let react;
-try {
-  react = import.sync('react');
-} catch {}
-
+const react = import.sync('react');
 if (react) {
   // Bind to the React framework, if available
 }
